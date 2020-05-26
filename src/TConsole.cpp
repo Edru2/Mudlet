@@ -25,6 +25,7 @@
 
 
 #include "Host.h"
+#include "TAccessibleConsole.h"
 #include "TCommandLine.h"
 #include "TDebug.h"
 #include "TDockWidget.h"
@@ -107,12 +108,16 @@ TConsole::TConsole(Host* pH, ConsoleType type, QWidget* parent)
 , mpHunspell_shared(nullptr)
 , mpHunspell_profile(nullptr)
 {
+    QAccessible::installFactory(TAccessibleConsole::consoleFactory);
+
     auto ps = new QShortcut(this);
     ps->setKey(Qt::CTRL + Qt::Key_W);
     ps->setContext(Qt::WidgetShortcut);
 
     if (mType & CentralDebugConsole) {
         setWindowTitle(tr("Debug Console"));
+        setAccessibleName(tr("Debug Console"));
+        setAccessibleDescription(tr("Debug messages are shown here."));
         // Probably will not show up as this is used inside a QMainWindow widget
         // which has it's own title and icon set.
         // mIsSubConsole was left false for this
@@ -127,6 +132,17 @@ TConsole::TConsole(Host* pH, ConsoleType type, QWidget* parent)
             mMainFrameBottomHeight = 0;
             mMainFrameLeftWidth = 0;
             mMainFrameRightWidth = 0;
+
+            if (mType & ErrorConsole) {
+                setAccessibleName(tr("Error Console"));
+                setAccessibleDescription(tr("Error messages are shown here."));
+            } else if (mType & SubConsole) {
+                setAccessibleName(tr("Sub Console"));
+                setAccessibleDescription(tr("Sub console messages are shown here."));                
+            } else if (mType & UserWindow) {
+                setAccessibleName(tr("User Window"));
+                setAccessibleDescription(tr("User window messages are shown here."));                    
+            }
         } else if (mType & (MainConsole|Buffer)) {
             // Orginally this was for TConsole instances without a parent pointer
             // This branch for: Buffers, MainConsole
@@ -137,6 +153,9 @@ TConsole::TConsole(Host* pH, ConsoleType type, QWidget* parent)
             mMainFrameRightWidth = mpHost->mBorderRightWidth;
             mCommandBgColor = mpHost->mCommandBgColor;
             mCommandFgColor = mpHost->mCommandFgColor;
+
+            setAccessibleName(tr("Main Window"));
+            setAccessibleDescription(tr("Game messages are shown here"));   
         } else {
             Q_ASSERT_X(false, "TConsole::TConsole(...)", "invalid TConsole type detected");
         }
@@ -2555,6 +2574,9 @@ void TConsole::print(const char* txt)
     buffer.append(msg, 0, msg.size(), mFormatCurrent.foreground(), mFormatCurrent.background(), mFormatCurrent.allDisplayAttributes());
     mUpperPane->showNewLines();
     mLowerPane->showNewLines();
+        
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 // echoUserWindow(const QString& msg) was a redundant wrapper around this method:
@@ -2563,6 +2585,9 @@ void TConsole::print(const QString& msg)
     buffer.append(msg, 0, msg.size(), mFormatCurrent.foreground(), mFormatCurrent.background(), mFormatCurrent.allDisplayAttributes());
     mUpperPane->showNewLines();
     mLowerPane->showNewLines();
+        
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 // printDebug(QColor& c, QColor& d, const QString& msg) was functionally the
@@ -2572,12 +2597,18 @@ void TConsole::print(const QString& msg, const QColor fgColor, const QColor bgCo
     buffer.append(msg, 0, msg.size(), fgColor, bgColor);
     mUpperPane->showNewLines();
     mLowerPane->showNewLines();
+        
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 void TConsole::printSystemMessage(const QString& msg)
 {
     QString txt = tr("System Message: %1").arg(msg);
     print(txt, mSystemMessageFgColor, mSystemMessageBgColor);
+        
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 void TConsole::echo(const QString& msg)
@@ -2587,6 +2618,9 @@ void TConsole::echo(const QString& msg)
     } else {
         print(msg);
     }
+        
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 void TConsole::copy()
@@ -2609,6 +2643,9 @@ void TConsole::paste()
     }
     mUpperPane->showNewLines();
     mLowerPane->showNewLines();
+        
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 void TConsole::pasteWindow(TBuffer bufferSlice)
@@ -2622,6 +2659,9 @@ void TConsole::appendBuffer()
     buffer.appendBuffer(mClipboard);
     mUpperPane->showNewLines();
     mLowerPane->showNewLines();
+
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 void TConsole::appendBuffer(TBuffer bufferSlice)
@@ -2629,6 +2669,9 @@ void TConsole::appendBuffer(TBuffer bufferSlice)
     buffer.appendBuffer(bufferSlice);
     mUpperPane->showNewLines();
     mLowerPane->showNewLines();
+
+    QAccessibleEvent event(this, QAccessible::DocumentContentChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 void TConsole::slot_stop_all_triggers(bool b)
