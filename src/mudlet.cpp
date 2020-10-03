@@ -2493,8 +2493,9 @@ bool mudlet::resizeWindow(Host* pHost, const QString& name, int x1, int y1)
 
     if (pC && pD) {
         if (!pD->isFloating()) {
-            // Undock a docked window
-            pD->setFloating(true);
+            resizeDocks({pD},{x1},Qt::Horizontal);
+            resizeDocks({pD},{y1},Qt::Vertical);
+            return true;
         }
 
         pD->resize(x1, y1);
