@@ -184,6 +184,16 @@ void TTextEdit::slot_scrollBarMoved(int line)
     }
 }
 
+void TTextEdit::setInitialSize()
+{
+    if (!mIsLowerPane) {
+        return;
+    }
+    // screenheight divided through 4 seems to be the initial screenheight of the lowerPane
+    mScreenHeight = mpConsole->mUpperPane->getScreenHeight() / 4;
+    mpConsole->mUpperPane->updateScrollBar(mpBuffer->mCursorY);
+}
+
 void TTextEdit::updateScrollBar(int line)
 {
     int screenHeight{mScreenHeight};

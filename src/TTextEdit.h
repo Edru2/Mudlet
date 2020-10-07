@@ -74,6 +74,7 @@ public:
     void mouseMoveEvent(QMouseEvent*) override;
     void showEvent(QShowEvent* event) override;
     void updateScreenView();
+    void setInitialSize();
     void updateScrollBar(int);
     void calculateHMaxRange();
     void updateHorizontalScrollBar();
