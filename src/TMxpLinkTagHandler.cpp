@@ -20,6 +20,7 @@
 
 #include "TMxpLinkTagHandler.h"
 #include "TMxpClient.h"
+#include "TLinkStore.h"
 
 // <A href=URL [hint=text] [expire=name]>
 TMxpTagHandlerResult TMxpLinkTagHandler::handleStartTag(TMxpContext& ctx, TMxpClient& client, MxpStartTag* tag)
@@ -47,13 +48,18 @@ TMxpTagHandlerResult TMxpLinkTagHandler::handleEndTag(TMxpContext& ctx, TMxpClie
 {
     Q_UNUSED(ctx)
     Q_UNUSED(tag)
-    QStringList *links, *hints;
+    QList<TLink> *links;
+    QStringList *hints;
     if (!client.getLink(mLinkId, &links, &hints)) {
         return MXP_TAG_NOT_HANDLED;
     }
 
     if (links != nullptr) {
-        links->replaceInStrings("&text;", mCurrentTagContent, Qt::CaseInsensitive);
+        QListIterator<TLink> it(*links);
+        while(it.hasNext()) {
+            auto tlink = it.next();
+            tlink.label = tlink.label.replace("&text;", mCurrentTagContent, Qt::CaseInsensitive);
+        }
     }
 
     client.setLinkMode(false);

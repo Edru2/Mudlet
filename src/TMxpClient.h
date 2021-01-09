@@ -24,6 +24,7 @@
 #include "MxpTag.h"
 #include "TMxpContext.h"
 #include "TMxpTagHandlerResult.h"
+#include "TLinkStore.h"
 
 class TMediaData;
 
@@ -60,7 +61,7 @@ public:
     virtual void setUnderline(bool val) = 0;
 
     virtual int setLink(const QStringList& hrefs, const QStringList& hints) = 0;
-    virtual bool getLink(int id, QStringList** hrefs, QStringList** hints) = 0;
+    virtual bool getLink(int id, QList<TLink>** hrefs, QStringList** hints) = 0;
 
     virtual void playMedia(TMediaData& mediaData) = 0;
     virtual void stopMedia(TMediaData& mediaData) = 0;

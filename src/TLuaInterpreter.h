@@ -44,6 +44,7 @@
 #endif // QT_TEXTTOSPEECH_LIB
 #include "post_guard.h"
 #include "TMap.h"
+#include "TLinkStore.h"
 
 extern "C" {
 #include <lauxlib.h>
@@ -94,6 +95,9 @@ public:
     std::pair<bool, bool> callLuaFunctionReturnBool(void* pT);
     double condenseMapLoad();
     bool compile(const QString& code, QString& error, const QString& name);
+    std::pair<int, QString> compileToClosure(const QString& code);
+    int runClosure(const int closureId);
+    QList<TLink> convertStringLinksToTLinkList(const QStringList& links, QString& errorMsg, const QString& name);
     bool compileScript(const QString&);
     void setAtcpTable(const QString&, const QString&);
     void signalMXPEvent(const QString &type, const QMap<QString, QString> &attrs, const QStringList &actions);
@@ -633,6 +637,8 @@ private:
     QMap<QNetworkReply*, QString> downloadMap;
 
     lua_State* pGlobalLua;
+    int putCallbackOnStack(const QString& code, QString& errorMsg, const QString& name);
+    static std::pair<int, QString> extractArgumentAsClosure(lua_State* L, int argNumber);
 
     struct lua_state_deleter {
       void operator()(lua_State* ptr) const noexcept {

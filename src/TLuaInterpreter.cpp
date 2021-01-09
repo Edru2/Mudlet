@@ -6379,23 +6379,36 @@ int TLuaInterpreter::setLink(lua_State* L)
         s++;
     }
 
-    if (!lua_isstring(L, s)) {
-        lua_pushstring(L, "setLink: wrong argument type");
+    if (!lua_isstring(L, s) && !lua_isfunction(L, s)) {
+        lua_pushfstring(L, "setLink: bad argument #%d type (link click callback as string or function expected, got %s!)", s, luaL_typename(L, s));
         return lua_error(L);
     }
-    QString linkFunction = lua_tostring(L, s);
+
+    int linkFunction;
+    auto& host = getHostFromLua(L);
+    if (lua_isstring(L, s)) {
+        auto [closure, error] = host.getLuaInterpreter()->compileToClosure(lua_tostring(L, s));
+        linkFunction = closure;
+        if (!linkFunction) {
+            lua_pushfstring(L, "setLink: bad argument #%d type (invalid lua code: %s!)", s, error.toUtf8().constData());
+            return lua_error(L);
+        }
+    } else if (lua_isfunction(L, s)) {
+        lua_pushvalue(L, s);
+        linkFunction = lua_ref(L, LUA_REGISTRYINDEX);
+    }
+    
     s++;
 
     if (!lua_isstring(L, s)) {
-        lua_pushstring(L, "setLink: wrong argument type");
+        lua_pushfstring(L, "setLink: bad argument #%d type (link hint as string expected, got %s!)", s, luaL_typename(L, s));
         return lua_error(L);
     }
     QString linkHint = lua_tostring(L, s);
     s++;
 
-    Host& host = getHostFromLua(L);
-    QStringList _linkFunction;
-    _linkFunction << linkFunction;
+    QList<TLink> _linkFunction;
+    _linkFunction << (struct TLink){QStringLiteral("setLink: anonymousFunction"), linkFunction};
     QStringList _linkHint;
     _linkHint << linkHint;
 
@@ -6467,8 +6480,20 @@ int TLuaInterpreter::setPopup(lua_State* L)
         return lua_error(L);
     }
 
+    QList<TLink> commands;
+    QListIterator it(_commandList);
+    while(it.hasNext()) {
+        auto [linkFunction, error] = host.getLuaInterpreter()->compileToClosure(lua_tostring(L, s));
+        if (!linkFunction) {
+            commands << (struct TLink){ "setPopup: anonymousFunction", linkFunction };
+        } else {
+            lua_pushfstring(L, "setPopup: bad argument #%d type (invalid lua code: %s!)", s, error.toUtf8().constData());
+            return lua_error(L);
+        }
+    }
+
     auto console = CONSOLE(L, windowName);
-    console->setLink(_commandList, _hintList);
+    console->setLink(commands, _hintList);
     if (console != host.mpConsole) {
         console->mUpperPane->forceUpdate();
         console->mLowerPane->forceUpdate();
@@ -11525,11 +11550,17 @@ int TLuaInterpreter::insertLink(lua_State* L)
 
     QString windowName(sL[0]);
     QString printScreen(sL[1]);
-    QStringList command;
+    QList<TLink> command;
     QStringList hint;
-    command << sL[2];
+    auto [closure, error] = TLuaInterpreter::extractArgumentAsClosure(L, 2);
+    if (closure != 0) {
+        command << (struct TLink){QStringLiteral("insertLink:anonymousFunction"), closure};
+    } else {
+        lua_pushfstring(L, "insertLink: invalid lua code (%s)", error.toUtf8().constData());
+        return lua_error(L);
+    }
     hint << sL[3];
-
+    
     auto console = CONSOLE(L, windowName);
     console->insertLink(printScreen, command, hint, b);
     return 0;
@@ -11598,8 +11629,15 @@ int TLuaInterpreter::insertPopup(lua_State* L)
         return lua_error(L);
     }
 
+    auto& host = getHostFromLua(L);
+    QString error;
+    auto tlinks = host.getLuaInterpreter()->convertStringLinksToTLinkList(_commandList, error, "insertPopup: anonymousFunction");
+    if(tlinks.size() != _commandList.size()) {
+        lua_pushfstring(L, "insertPopup: invalid lua code: %s", error.toUtf8().constData());
+        return lua_error(L);
+    }
     auto console = CONSOLE(L, windowName);
-    console->insertLink(txt, _commandList, _hintList, customFormat);
+    console->insertLink(txt, tlinks, _hintList, customFormat);
     return 0;
 }
 
@@ -11730,8 +11768,8 @@ int TLuaInterpreter::echoPopup(lua_State* L)
     lua_pushnil(L);
     while (lua_next(L, s) != 0) {
         // key at index -2 and value at index -1
-        if (lua_type(L, -1) == LUA_TSTRING) {
-            QString cmd = lua_tostring(L, -1);
+        if (lua_type(L, -1) == LUA_TSTRING || lua_type(L, -1) == LUA_TFUNCTION) {
+            TLink cmd = lua_tostring(L, -1);
             commandList << cmd;
         }
         // removes value, but keeps key for next iteration
@@ -11764,8 +11802,15 @@ int TLuaInterpreter::echoPopup(lua_State* L)
         return lua_error(L);
     }
 
+    QString error;
+    auto& host = getHostFromLua(L);
+    auto tlinks = host.getLuaInterpreter()->convertStringLinksToTLinkList(commandList, error, "echoPopup: anonymousFunction");
+    if(tlinks.size() != commandList.size()) {
+        lua_pushfstring(L, "echoPopup: invalid lua code: %s", error.toUtf8().constData());
+        return lua_error(L);
+    }
     auto console = CONSOLE(L, windowName);
-    console->echoLink(text, commandList, hintList, customFormat);
+    console->echoLink(text, tlinks, hintList, customFormat);
     return 0;
 }
 
@@ -11795,10 +11840,10 @@ int TLuaInterpreter::echoLink(lua_State* L)
     a1 = lua_tostring(L, s);
 
     if (n > 1) {
-        if (!lua_isstring(L, ++s)) {
+        if (!lua_isstring(L, ++s) && !lua_isfunction(L, s)) {
             if (n == 3 || (n > 3 && n < 5 && gotBool)) {
-                lua_pushfstring(L, "echoLink: bad argument #%d type (command as string expected, got %s!)", s, luaL_typename(L, s));
-            } else {
+                lua_pushfstring(L, "echoLink: bad argument #%d type (lua script as string or function expected, got %s!), got %s!)", s, luaL_typename(L, s));
+            } else if (!lua_isstring(L, s)) {
                 lua_pushfstring(L, "echoLink: bad argument #%d type (text as string expected, got %s!)", s, luaL_typename(L, s));
             }
             return lua_error(L);
@@ -11806,11 +11851,11 @@ int TLuaInterpreter::echoLink(lua_State* L)
         a2 = lua_tostring(L, s);
     }
     if (n > 2) {
-        if (!lua_isstring(L, ++s)) {
+        if (!lua_isstring(L, ++s) && !lua_isfunction(L, s)) {
             if (n == 3 || (n > 3 && n < 5 && gotBool)) {
                 lua_pushfstring(L, "echoLink: bad argument #%d type (hint as string expected, got %s!)", s, luaL_typename(L, s));
-            } else {
-                lua_pushfstring(L, "echoLink: bad argument #%d type (command as string expected, got %s!)", s, luaL_typename(L, s));
+            } else if (!lua_isstring(L, s)) {
+                lua_pushfstring(L, "echoLink: bad argument #%d type (lua script as string or function expected, got %s!)", s, luaL_typename(L, s));
             }
             return lua_error(L);
         }
@@ -11842,22 +11887,31 @@ int TLuaInterpreter::echoLink(lua_State* L)
 
     QString text;
     QString windowName;
-    QStringList function;
+    int functionArg;
     QStringList hint;
+    QList<TLink> command;
 
     if (n == 3 || (n == 4 && gotBool)) {
-        text = a1;
-        function << a2;
+        text = lua_tostring(L, 1);
+        functionArg = 2;
         hint << a3;
     } else {
         windowName = a1;
         text = a2;
-        function << a3;
+        functionArg = 3;
         hint << a4;
     }
 
+    auto [closure, error] = TLuaInterpreter::extractArgumentAsClosure(L, functionArg);
+    if (closure != 0) {
+        command << (struct TLink){QStringLiteral("echoLink: anonymousFunction"), closure};
+    } else {
+        lua_pushfstring(L, "echoLink: invalid lua code (%s)", error.toUtf8().constData());
+        return lua_error(L);
+    } 
+
     auto console = CONSOLE(L, windowName);
-    console->echoLink(text, function, hint, useCurrentFormat);
+    console->echoLink(text, command, hint, useCurrentFormat);
     return 0;
 }
 
@@ -14173,6 +14227,67 @@ bool TLuaInterpreter::compile(const QString& code, QString& errorMsg, const QStr
     } else {
         return false;
     }
+}
+
+std::pair<int, QString> TLuaInterpreter::extractArgumentAsClosure(lua_State* L, int argNumber)
+{
+    auto& host = getHostFromLua(L);
+    if (lua_isstring(L, argNumber)) {
+        auto [closure, error] = host.getLuaInterpreter()->compileToClosure(lua_tostring(L, argNumber));
+        if (closure) {
+            return std::make_pair(closure, QString());
+        }
+        return std::make_pair(0, error);
+    } else if (lua_isfunction(L, argNumber)) {
+        lua_pushvalue(L, argNumber);
+        return std::make_pair(lua_ref(L, LUA_REGISTRYINDEX), QString());
+    }
+    return std::make_pair(0, QStringLiteral("type provided not valid"));
+}
+
+// No documentation available in wiki - internal functionó
+std::pair<int, QString> TLuaInterpreter::compileToClosure(const QString& code)
+{
+    lua_State* L = pGlobalLua;
+    int error = luaL_loadbuffer(L, code.toUtf8().constData(), strlen(code.toUtf8().constData()), code.toUtf8().data());
+    int topElementIndex = lua_gettop(L);
+    QString e = "invalid Lua code: ";
+    if (error) {
+        if (lua_isstring(L, topElementIndex)) {
+            e += lua_tostring(L, topElementIndex);
+        } else {
+            e += "No error message available from Lua";
+        }
+        return std::make_pair(0, e);
+    } else {
+        return std::make_pair(luaL_ref(L, LUA_REGISTRYINDEX), QString());
+    }
+}
+
+// No documentation available in wiki - internal function
+int TLuaInterpreter::runClosure(const int callbackId)
+{
+    lua_State* L = pGlobalLua;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, callbackId);
+    return lua_pcall(L, 0, 0, 0);
+}
+
+
+QList<TLink> TLuaInterpreter::convertStringLinksToTLinkList(QList<TLink> tlinks, QString& error, const QString& name) {
+    QListIterator it(tlinks);
+    while(it.hasNext()) {
+        auto tlink = it.next();
+        if (!tlink.closure) {
+            auto [closure, error] = compileToClosure(tlink.label);
+            if (closure) {
+            tlinks << (struct TLink){name, closure};
+        } else {
+            break;
+        }
+        }
+    }
+    return tlinks;
 }
 
 // No documentation available in wiki - internal function
