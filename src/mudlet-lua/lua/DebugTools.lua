@@ -182,7 +182,6 @@ function prettywrite (tbl, space, not_clever)
           end
         end
       end
-      tables[t] = nil
       eat_last_comma()
       putln(oldindent .. '},')
     else
