@@ -1158,7 +1158,7 @@ void TConsole::reset()
     mFormatCurrent.setAllDisplayAttributes(TChar::None);
 }
 
-void TConsole::insertLink(const QString& text, QStringList& func, QStringList& hint, QPoint P, bool customFormat)
+void TConsole::insertLink(const QString& text, QList<TLink>& func, QStringList& hint, QPoint P, bool customFormat)
 {
     int x = P.x();
     int y = P.y();
@@ -1299,7 +1299,7 @@ void TConsole::insertText(const QString& msg)
     insertText(msg, mUserCursor);
 }
 
-void TConsole::insertLink(const QString& text, QStringList& func, QStringList& hint, bool customFormat)
+void TConsole::insertLink(const QString& text, QList<TLink>& func, QStringList& hint, bool customFormat)
 {
     insertLink(text, func, hint, mUserCursor, customFormat);
 }
@@ -1629,9 +1629,9 @@ std::tuple<bool, QString, int, int> TConsole::getSelection()
     return std::make_tuple(true, text, start, length);
 }
 
-void TConsole::setLink(const QStringList& linkFunction, const QStringList& linkHint)
+void TConsole::setLink(const QList<TLink>& link, const QStringList& linkHint)
 {
-    buffer.applyLink(P_begin, P_end, linkFunction, linkHint);
+    buffer.applyLink(P_begin, P_end, link, linkHint);
     mUpperPane->forceUpdate();
     mLowerPane->forceUpdate();
 }
@@ -1725,7 +1725,7 @@ void TConsole::printCommand(QString& msg)
     }
 }
 
-void TConsole::echoLink(const QString& text, QStringList& func, QStringList& hint, bool customFormat)
+void TConsole::echoLink(const QString& text, QList<TLink>& func, QStringList& hint, bool customFormat)
 {
     if (customFormat) {
         buffer.addLink(mTriggerEngineMode, text, func, hint, mFormatCurrent);

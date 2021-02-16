@@ -122,10 +122,15 @@ void TMxpSendTagHandler::resetCurrentTagContent(TMxpClient& client)
 
 void TMxpSendTagHandler::updateHrefInLinks(TMxpClient& client) const
 {
-    QStringList *hrefs, *hints;
-    if (client.getLink(mLinkId, &hrefs, &hints)) {
-        if (hrefs != nullptr) {
-            hrefs->replaceInStrings(TAG_CONTENT_PLACEHOLDER, mCurrentTagContent, Qt::CaseInsensitive);
+    QList<TLink> *links;
+    QStringList *hints;
+    if (client.getLink(mLinkId, &links, &hints)) {
+        if (links != nullptr) {
+            QListIterator<TLink> it(*links);
+            while(it.hasNext()) {
+                auto tlink = it.next();
+                tlink.label = tlink.label.replace(TAG_CONTENT_PLACEHOLDER, mCurrentTagContent, Qt::CaseInsensitive);
+            }
         }
 
         if (hints != nullptr) {

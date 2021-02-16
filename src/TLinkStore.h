@@ -25,11 +25,16 @@
 #include <QStringList>
 #include "post_guard.h"
 
+struct TLink {
+    QString label;
+    int closure;
+};
+
 // Keep together lists of links and hints associated
 class TLinkStore {
     inline static const int scmMaxLinks = 2000;
 
-    QMap<int, QStringList> mLinkStore;
+    QMap<int, QList<TLink>> mLinkStore;
     QMap<int, QStringList> mHintStore;
 
     int mLinkID;
@@ -40,17 +45,18 @@ public:
 
     explicit TLinkStore(int maxLinks) : mLinkID(0), maxLinks(maxLinks) {}
 
-    int addLinks(const QStringList& links, const QStringList& hints);
+    int addLinks(const QList<TLink>& links, const QStringList& hints);
 
-    QStringList& getLinks(int id);
+    QList<TLink>& getLinks(int id);
     QStringList& getHints(int id);
-    QStringList getLinksConst(int id) const;
+    QList<TLink> getLinksConst(int id) const;
     QStringList getHintsConst(int id) const;
+    QList<int> getClosures(int id) const;
 
     int getCurrentLinkID() const;
 
-    QStringList getCurrentLinks() const;
-    void setCurrentLinks(const QStringList& links);
+    QList<TLink> getCurrentLinks() const;
+    void setCurrentLinks(const QList<TLink>& links);
 };
 
 #endif //MUDLET_TLINKSTORE_H
