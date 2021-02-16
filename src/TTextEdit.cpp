@@ -1110,11 +1110,10 @@ void TTextEdit::slot_popupMenu()
     if (!pA) {
         return;
     }
-    QString cmd;
     if (mPopupCommands.contains(pA->text())) {
-        cmd = mPopupCommands[pA->text()];
+        auto cmd = mPopupCommands[pA->text()];
+        mpHost->mLuaInterpreter.runClosure(cmd.closure);
     }
-    mpHost->mLuaInterpreter.compileAndExecuteScript(cmd);
 }
 
 void TTextEdit::mousePressEvent(QMouseEvent* event)
@@ -1167,11 +1166,10 @@ void TTextEdit::mousePressEvent(QMouseEvent* event)
         if (y < static_cast<int>(mpBuffer->buffer.size())) {
             if (x < static_cast<int>(mpBuffer->buffer[y].size()) && !isOutOfbounds) {
                 if (mpBuffer->buffer.at(y).at(x).linkIndex()) {
-                    QStringList command = mpBuffer->mLinkStore.getLinks(mpBuffer->buffer.at(y).at(x).linkIndex());
-                    QString func;
-                    if (!command.empty()) {
-                        func = command.at(0);
-                        mpHost->mLuaInterpreter.compileAndExecuteScript(func);
+                    QList<TLink> commands = mpBuffer->mLinkStore.getLinks(mpBuffer->buffer.at(y).at(x).linkIndex());
+                    if (!commands.empty()) {
+                        auto tlink = commands.at(0);
+                        mpHost->mLuaInterpreter.runClosure(tlink.closure);
                         return;
                     }
                 }
@@ -1246,18 +1244,18 @@ void TTextEdit::mousePressEvent(QMouseEvent* event)
         if (y < static_cast<int>(mpBuffer->buffer.size())) {
             if (x < static_cast<int>(mpBuffer->buffer[y].size()) && !isOutOfbounds) {
                 if (mpBuffer->buffer.at(y).at(x).linkIndex()) {
-                    QStringList command = mpBuffer->mLinkStore.getLinks(mpBuffer->buffer.at(y).at(x).linkIndex());
+                    QList<TLink> commands = mpBuffer->mLinkStore.getLinks(mpBuffer->buffer.at(y).at(x).linkIndex());
                     QStringList hint = mpBuffer->mLinkStore.getHints(mpBuffer->buffer.at(y).at(x).linkIndex());
-                    if (command.size() > 1) {
+                    if (commands.size() > 1) {
                         auto popup = new QMenu(this);
-                        for (int i = 0, total = command.size(); i < total; ++i) {
+                        for (int i = 0, total = commands.size(); i < total; ++i) {
                             QAction* pA;
                             if (i < hint.size()) {
                                 pA = popup->addAction(hint[i]);
-                                mPopupCommands[hint[i]] = command[i];
+                                mPopupCommands[hint[i]] = commands[i];
                             } else {
-                                pA = popup->addAction(command[i]);
-                                mPopupCommands[command[i]] = command[i];
+                                pA = popup->addAction(commands[i].label);
+                                mPopupCommands[commands[i].label] = commands[i];
                             }
                             connect(pA, &QAction::triggered, this, &TTextEdit::slot_popupMenu);
                         }

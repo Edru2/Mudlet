@@ -19,7 +19,7 @@
 
 #include "TLinkStore.h"
 
-int TLinkStore::addLinks(const QStringList& links, const QStringList& hints)
+int TLinkStore::addLinks(const QList<TLink>& links, const QStringList& hints)
 {
     if (++mLinkID > maxLinks) {
         mLinkID = 1;
@@ -30,17 +30,17 @@ int TLinkStore::addLinks(const QStringList& links, const QStringList& hints)
     return mLinkID;
 }
 
-QStringList TLinkStore::getCurrentLinks() const
+QList<TLink> TLinkStore::getCurrentLinks() const
 {
     return mLinkStore.value(mLinkID);
 }
 
-void TLinkStore::setCurrentLinks(const QStringList& links)
+void TLinkStore::setCurrentLinks(const QList<TLink>& links)
 {
     mLinkStore[mLinkID] = links;
 }
 
-QStringList& TLinkStore::getLinks(int id)
+QList<TLink>& TLinkStore::getLinks(int id)
 {
     return mLinkStore[id];
 }
@@ -50,7 +50,7 @@ QStringList& TLinkStore::getHints(int id)
     return mHintStore[id];
 }
 
-QStringList TLinkStore::getLinksConst(int id) const
+QList<TLink> TLinkStore::getLinksConst(int id) const
 {
     return mLinkStore.value(id);
 }

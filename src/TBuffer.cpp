@@ -261,7 +261,7 @@ int TBuffer::getLastLineNumber()
     }
 }
 
-void TBuffer::addLink(bool trigMode, const QString& text, QStringList& command, QStringList& hint, TChar format)
+void TBuffer::addLink(bool trigMode, const QString& text, QList<TLink>& command, QStringList& hint, TChar format)
 {
     int id = mLinkStore.addLinks(command, hint);
 
@@ -2979,7 +2979,7 @@ bool TBuffer::deleteLines(int from, int to)
     }
 }
 
-bool TBuffer::applyLink(const QPoint& P_begin, const QPoint& P_end, const QStringList& linkFunction, const QStringList& linkHint)
+bool TBuffer::applyLink(const QPoint& P_begin, const QPoint& P_end, const QList<TLink>& linkFunction, const QStringList& linkHint)
 {
     int x1 = P_begin.x();
     int x2 = P_end.x();

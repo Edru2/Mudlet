@@ -65,10 +65,15 @@ void TMxpMudlet::popColor(QList<QColor>& stack)
 
 int TMxpMudlet::setLink(const QStringList& links, const QStringList& hints)
 {
-    return getLinkStore().addLinks(links, hints);
+    QList<TLink> tlinks;
+    for (auto link : links) {
+        int closure = mpHost->getLuaInterpreter()->compileToClosure(link).first;
+        tlinks << (struct TLink){link, closure};
+    }
+    return getLinkStore().addLinks(tlinks, hints);
 }
 
-bool TMxpMudlet::getLink(int id, QStringList** links, QStringList** hints)
+bool TMxpMudlet::getLink(int id, QList<TLink>** links, QStringList** hints)
 {
     *links = &getLinkStore().getLinks(id);
     *hints = &getLinkStore().getHints(id);
@@ -106,7 +111,10 @@ void TMxpMudlet::enqueueMxpEvent(MxpStartTag* tag)
     for (const auto& attrName : tag->getAttributesNames()) {
         ev.attrs[attrName] = tag->getAttributeValue(attrName);
     }
-    ev.actions = getLinkStore().getCurrentLinks();
+    QListIterator it(getLinkStore().getCurrentLinks());
+    while(it.hasNext()) {
+        ev.actions << it.next().label;
+    }
     mMxpEvents.enqueue(ev);
 }
 
