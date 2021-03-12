@@ -1,6 +1,6 @@
 /***************************************************************************
  *   Copyright (C) 2008-2013 by Heiko Koehn - KoehnHeiko@googlemail.com    *
- *   Copyright (C) 2013-2016, 2018-2020 by Stephen Lyons                   *
+ *   Copyright (C) 2013-2016, 2018-2021 by Stephen Lyons                   *
  *                                               - slysven@virginmedia.com *
  *   Copyright (C) 2014 by Ahmed Charles - acharles@outlook.com            *
  *                                                                         *
@@ -76,8 +76,6 @@ const QString& key_dialog_cancel = QStringLiteral("dialog-cancel");
 const QString& key_icon_dialog_ok_apply = QStringLiteral(":/icons/dialog-ok-apply.png");
 const QString& key_icon_dialog_cancel = QStringLiteral(":/icons/dialog-cancel.png");
 
-// replacement parameter supplied at points of use:
-const QString& key_styleSheet_backgroundColor = QStringLiteral("background-color: %1");
 
 T2DMap::T2DMap(QWidget* parent)
 : QWidget(parent)
@@ -165,7 +163,6 @@ T2DMap::T2DMap(QWidget* parent)
     mMultiSelectionListWidget.move(0, 0);
     mMultiSelectionListWidget.hide();
     connect(&mMultiSelectionListWidget, &QTreeWidget::itemSelectionChanged, this, &T2DMap::slot_roomSelectionChanged);
-    setCursor(Qt::OpenHandCursor);
 }
 
 void T2DMap::init()
@@ -187,7 +184,7 @@ void T2DMap::init()
     flushSymbolPixmapCache();
 }
 
-void T2DMap::shiftDown()
+void T2DMap::slot_shiftDown()
 {
     mShiftMode = true;
     mOy--;
@@ -200,34 +197,34 @@ void T2DMap::toggleShiftMode()
     update();
 }
 
-void T2DMap::shiftUp()
+void T2DMap::slot_shiftUp()
 {
     mShiftMode = true;
     mOy++;
     update();
 }
 
-void T2DMap::shiftLeft()
+void T2DMap::slot_shiftLeft()
 {
     mShiftMode = true;
     mOx--;
     update();
 }
 
-void T2DMap::shiftRight()
+void T2DMap::slot_shiftRight()
 {
     mShiftMode = true;
     mOx++;
     update();
 }
-void T2DMap::shiftZup()
+void T2DMap::slot_shiftZup()
 {
     mShiftMode = true;
     mOz++;
     update();
 }
 
-void T2DMap::shiftZdown()
+void T2DMap::slot_shiftZdown()
 {
     mShiftMode = true;
     mOz--;
@@ -1576,7 +1573,7 @@ void T2DMap::paintEvent(QPaintEvent* e)
     paintMapInfo(renderTimer, painter, mAreaID, infoColor);
 
     static bool isAreaWidgetValid = true; // Remember between uses
-    QFont _f = mpMap->mpMapper->showArea->font();
+    QFont _f = mpMap->mpMapper->comboBox_showArea->font();
     if (isAreaWidgetValid) {
         if (mAreaID == -1                                 // the map being shown is the "default" area
             && !mpMap->mpMapper->getDefaultAreaShown()) { // the area widget is not showing the "default" area
@@ -1600,7 +1597,7 @@ void T2DMap::paintEvent(QPaintEvent* e)
         }
     }
 
-    mpMap->mpMapper->showArea->setFont(_f);
+    mpMap->mpMapper->comboBox_showArea->setFont(_f);
 
     if (!mHelpMsg.isEmpty()) {
         painter.setPen(QColor(255, 155, 50));
@@ -2401,11 +2398,7 @@ void T2DMap::mouseReleaseEvent(QMouseEvent* e)
     //move map with left mouse button + ALT (->
     if (mpMap->mLeftDown) {
         mpMap->mLeftDown = false;
-        if (mMapViewOnly) {
-            setCursor(Qt::OpenHandCursor);
-        } else {
-            unsetCursor();
-        }
+        unsetCursor();
     }
 
     if (e->button() & Qt::LeftButton) {
@@ -3208,7 +3201,7 @@ void T2DMap::slot_customLineProperties()
             mpCurrentLineArrow->setChecked(room->customLinesArrow.value(exit));
             mCurrentLineColor = room->customLinesColor.value(exit);
 
-            mpCurrentLineColor->setStyleSheet(key_styleSheet_backgroundColor.arg(mCurrentLineColor.name()));
+            mpCurrentLineColor->setStyleSheet(mudlet::self()->mBG_ONLY_STYLESHEET.arg(mCurrentLineColor.name()));
             connect(mpCurrentLineColor, &QAbstractButton::clicked, this, &T2DMap::slot_customLineColor);
             dialog->adjustSize();
 
@@ -3424,11 +3417,6 @@ void T2DMap::slot_toggleMapViewOnly()
         // In the init() case this is a no-op, otherwise it ensures the profile
         // state matches the local copy (so it gets saved with the profile):
         mpHost->mMapViewOnly = mMapViewOnly;
-        if (mMapViewOnly) {
-            setCursor(Qt::OpenHandCursor);
-        } else {
-            unsetCursor();
-        }
         TEvent mapModeEvent{};
         mapModeEvent.mArgumentList.append(QLatin1String("mapModeChangeEvent"));
         mapModeEvent.mArgumentTypeList.append(ARGUMENT_TYPE_STRING);
@@ -4212,17 +4200,17 @@ void T2DMap::mouseMoveEvent(QMouseEvent* event)
         int x = event->x();
         int y = height() - event->y();
         if ((mpMap->m2DPanXStart - x) > 1) {
-            shiftRight();
+            slot_shiftRight();
             mpMap->m2DPanXStart = x;
         } else if ((mpMap->m2DPanXStart - x) < -1) {
-            shiftLeft();
+            slot_shiftLeft();
             mpMap->m2DPanXStart = x;
         }
         if ((mpMap->m2DPanYStart - y) > 1) {
-            shiftDown();
+            slot_shiftDown();
             mpMap->m2DPanYStart = y;
         } else if ((mpMap->m2DPanYStart - y) < -1) {
-            shiftUp();
+            slot_shiftUp();
             mpMap->m2DPanYStart = y;
         }
         return;
@@ -4825,7 +4813,7 @@ void T2DMap::slot_setCustomLine()
     mpCurrentLineStyle->setCurrentIndex(mpCurrentLineStyle->findData(static_cast<int>(mCurrentLineStyle)));
 
     mpCurrentLineArrow->setChecked(mCurrentLineArrow);
-    mpCurrentLineColor->setStyleSheet(key_styleSheet_backgroundColor.arg(mCurrentLineColor.name()));
+    mpCurrentLineColor->setStyleSheet(mudlet::self()->mBG_ONLY_STYLESHEET.arg(mCurrentLineColor.name()));
     connect(specialExits, &QTreeWidget::itemClicked, this, &T2DMap::slot_setCustomLine2B);
     connect(mpCurrentLineColor, &QAbstractButton::clicked, this, &T2DMap::slot_customLineColor);
     dialog->adjustSize();
@@ -4846,7 +4834,7 @@ void T2DMap::slot_customLineColor()
 
     if (color.isValid()) {
         mCurrentLineColor = color;
-        mpCurrentLineColor->setStyleSheet(key_styleSheet_backgroundColor.arg(color.name()));
+        mpCurrentLineColor->setStyleSheet(mudlet::self()->mBG_ONLY_STYLESHEET.arg(color.name()));
     }
 }
 
