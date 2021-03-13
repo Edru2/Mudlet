@@ -87,6 +87,7 @@ private slots:
     void slot_openPackageLocation();
     void slot_openInfoDialog();
     void slot_packageChanged(int);
+    void slot_recountItems();
 
 protected:
     bool eventFilter(QObject* obj, QEvent* evt) override;
@@ -96,6 +97,7 @@ private:
     static void appendToConfigFile(QString&, const QString&, const QString&);
     void displayResultMessage(const QString&, const bool isSuccessMessage = true);
     void uncheckAllChildren();
+    int countCheckedItems();
 
     Ui::dlgPackageExporter* ui;
     QPointer<Host> mpHost;
@@ -108,6 +110,7 @@ private:
     QTreeWidgetItem* mpScripts;
     QTreeWidgetItem* mpKeys;
     QTreeWidgetItem* mpButtons;
+    QLabel* mtextSelection;
     QString mPackageName;
     QString mPackagePath;
     QString mPackagePathFileName;

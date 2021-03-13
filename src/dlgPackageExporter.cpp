@@ -57,6 +57,7 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     ui->input->hide();
 
     treeWidget = ui->treeWidget;
+    mtextSelection = ui->text_selection;
 
     mpTriggers = new QTreeWidgetItem({tr("Triggers")});
     mpAliases = new QTreeWidgetItem({tr("Aliases")});
@@ -71,6 +72,9 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     treeWidget->addTopLevelItem(mpScripts);
     treeWidget->addTopLevelItem(mpKeys);
     treeWidget->addTopLevelItem(mpButtons);
+
+    connect(treeWidget, &QTreeWidget::itemChanged, this, &dlgPackageExporter::slot_recountItems);
+
 
     mDependencies = new QStringListModel();
     ui->Dependencies->setModel(mDependencies);
@@ -953,6 +957,28 @@ void dlgPackageExporter::uncheckAllChildren()
     }
 }
 
+int countRecursive(QTreeWidgetItem* item, int count)
+{
+    count = count + (item->checkState(0) == Qt::Checked ? 1 : 0);
+    for (int i = 0; i < item->childCount(); i++) {
+        count = countRecursive(item->child(i), count);
+    }
+    return count;
+}
+
+int dlgPackageExporter::countCheckedItems()
+{
+    int count = 0;
+    for (int i = 0; i < treeWidget->topLevelItemCount(); i++) {
+        count = count + (treeWidget->topLevelItem(i)->checkState(0) == Qt::Checked ? 1 : 0);
+        for (int j = 0; j < treeWidget->topLevelItem(i)->childCount(); j++) {
+            count = countRecursive(treeWidget->topLevelItem(i)->child(j), count);
+        }
+    }
+
+    return count;
+}
+
 void dlgPackageExporter::recurseTriggers(TTrigger* trig, QTreeWidgetItem* qTrig)
 {
     std::list<TTrigger*>* childList = trig->getChildrenList();
@@ -1231,4 +1257,16 @@ void dlgPackageExporter::displayResultMessage(const QString& html, bool const is
                                    "the resulting package to the Mudlet forums) should be translated.")));
     ui->infoLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
     ui->infoLabel->setOpenExternalLinks(true);
+}
+
+void dlgPackageExporter::slot_recountItems()
+{
+    int itemsToExport = countCheckedItems();
+    if (itemsToExport == 0) {
+        mtextSelection->setText(tr("Select what to export"));
+    } else if (itemsToExport == 1) {
+        mtextSelection->setText(tr("Select what to export (1 item)"));
+    } else {
+        mtextSelection->setText(tr("Select what to export (%1 items)").arg(itemsToExport));
+    }
 }
