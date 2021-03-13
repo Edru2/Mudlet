@@ -572,8 +572,7 @@ bool TConsole::eventFilter(QObject* object, QEvent* event)
 {
     Q_UNUSED(object);
     if (event->type() == QEvent::Paint) {
-        QPaintEvent* paintEvent = static_cast<QPaintEvent*>(event);
-        const QRect& rect = paintEvent->rect();
+        const QRect& rect = mpMainFrame->visibleRegion().boundingRect();
         QPainter painter(mpMainFrame);
         if (!painter.isActive()) {
             return false;

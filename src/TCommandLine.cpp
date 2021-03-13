@@ -66,6 +66,13 @@ TCommandLine::TCommandLine(Host* pHost, CommandLineType type, TConsole* pConsole
 
     setPalette(mRegularPalette);
 
+    //style subCommandLines by stylesheet
+    if (mType != MainCommandLine) {
+        QColor c = mpHost->mCommandLineBgColor;
+        QString styleSheet{QStringLiteral("QPlainTextEdit{background-color: rgb(%1, %2, %3);}").arg(c.red()).arg(c.green()).arg(c.blue())};
+        setStyleSheet(styleSheet);
+    }
+
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setCenterOnScroll(false);
     setWordWrapMode(QTextOption::WrapAnywhere);
