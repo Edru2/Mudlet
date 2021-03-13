@@ -567,7 +567,7 @@ void TConsole::resizeConsole()
     QApplication::sendEvent(this, &event);
 }
 
-// mpMainFrame uses this to paint it's colour to avoid stylesheet and or palette propagation to it's children
+// mpMainFrame uses the paint event for painting the border-colour to avoid stylesheet and/or palette propagation to its children
 bool TConsole::eventFilter(QObject* object, QEvent* event)
 {
     Q_UNUSED(object);
