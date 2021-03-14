@@ -754,6 +754,7 @@ private:
 
     // Now a per profile option this one represents the state of this profile:
     bool mCompactInputLine;
+    QPalette* mHostPalette;
 
     QTimer purgeTimer;
 };

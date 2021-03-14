@@ -399,6 +399,7 @@ Host::Host(int port, const QString& hostname, const QString& login, const QStrin
 , mDebugShowAllProblemCodepoints(false)
 , mCompactInputLine(false)
 {
+    mHostPalette = new QPalette();
     // mLogStatus = mudlet::self()->mAutolog;
     mLuaInterface.reset(new LuaInterface(this));
 
@@ -3465,7 +3466,32 @@ bool Host::setBackgroundColor(const QString& name, int r, int g, int b, int alph
         pC->setConsoleBgColor(r, g, b, alpha);
         return true;
     } else if (pL) {
-        QString styleSheet = QStringLiteral("QWidget{background-color: rgba(%1,%2,%3,%4);}").arg(r).arg(g).arg(b).arg(alpha);
+        QString oldStyle = pL->styleSheet();
+        QColor oldColor = pL->mBgColor;
+        pL->mBgColor = QColor(r, g, b, alpha);
+        if(oldColor.isValid()){
+            oldStyle.remove(QStringLiteral("QWidget{background-color: rgba(%1, %2, %3, %4);}").arg(oldColor.red()).arg(oldColor.green()).arg(oldColor.blue()).arg(oldColor.alpha()));
+            oldStyle.remove(" ");
+        }
+        if(!oldStyle.isEmpty()){
+            //Checking if the stylesheet is valid
+            QLabel* asd = new QLabel();
+            asd->setStyleSheet("blabla");
+            bool isValidStyle = (pL->palette() == asd->palette() ? false : true);
+            asd->deleteLater();
+            if(!isValidStyle){
+                oldStyle.clear();
+                qDebug() << pL->style();
+            }
+            if(oldStyle.contains(QRegExp("background-color|border-image|background"))){
+                return true;
+            }
+            if (!oldStyle.contains("{")){
+                oldStyle.append("}");
+                oldStyle.prepend("*{");
+            }
+        }
+        QString styleSheet = QStringLiteral("QWidget{background-color: rgba(%1, %2, %3, %4);} %5").arg(r).arg(g).arg(b).arg(alpha).arg(oldStyle);
         pL->setStyleSheet(styleSheet);
         return true;
     }

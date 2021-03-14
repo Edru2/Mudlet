@@ -68,6 +68,7 @@ public:
     int mWheelFunction = 0;
     int mEnterFunction = 0;
     int mLeaveFunction = 0;
+    QColor mBgColor;
 
 private:
     void releaseFunc(const int existingFunction, const int newFunction);

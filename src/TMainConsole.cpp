@@ -96,11 +96,15 @@ void TMainConsole::setLabelStyleSheet(std::string& buf, std::string& sh)
     QString key{buf.c_str()};
     QString sheet{sh.c_str()};
     if (mLabelMap.find(key) != mLabelMap.end()) {
-        QLabel* pC = mLabelMap[key];
+        TLabel* pC = mLabelMap[key];
         if (!pC) {
             return;
         }
         pC->setStyleSheet(sheet);
+        QColor c = pC->mBgColor;
+        if (c.isValid()) {
+            mpHost->setBackgroundColor(key, c.red(), c.green(), c.blue(), c.alpha());
+        }
         return;
     }
 }
