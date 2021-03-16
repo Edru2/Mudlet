@@ -113,7 +113,7 @@ private:
     QTreeWidgetItem* mpScripts;
     QTreeWidgetItem* mpKeys;
     QTreeWidgetItem* mpButtons;
-    QLabel* mtextSelection;
+    QGroupBox* mtextSelection;
     QString mPackageName;
     QString mPackagePath;
     QString mPackagePathFileName;

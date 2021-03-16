@@ -57,7 +57,7 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     ui->input->hide();
 
     treeWidget = ui->treeWidget;
-    mtextSelection = ui->text_selection;
+    mtextSelection = ui->groupBox_exportSelection;
 
     mpTriggers = new QTreeWidgetItem({tr("Triggers")});
     mpAliases = new QTreeWidgetItem({tr("Aliases")});
@@ -1279,11 +1279,9 @@ void dlgPackageExporter::slot_recountItems()
         QTimer::singleShot(0, this, [this]() {
             int itemsToExport = countCheckedItems();
             if (itemsToExport == 0) {
-                mtextSelection->setText(tr("Select what to export"));
-            } else if (itemsToExport == 1) {
-                mtextSelection->setText(tr("Select what to export (1 item)"));
+                mtextSelection->setTitle(tr("Select what to export"));
             } else {
-                mtextSelection->setText(tr("Select what to export (%1 items)").arg(itemsToExport));
+                mtextSelection->setTitle(tr("Select what to export (%1 items)", "Package exporter selection", itemsToExport).arg(itemsToExport));
             }
             debounce = false;
         });

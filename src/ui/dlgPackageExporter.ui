@@ -24,33 +24,11 @@
     <number>4</number>
    </property>
    <item>
-    <widget class="QLabel" name="label">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
+    <widget class="QGroupBox" name="groupBox_packageName">
+     <property name="title">
       <string>Name your package</string>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="frame">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QComboBox" name="packageList">
         <property name="enabled">
@@ -358,21 +336,11 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="text_selection">
-     <property name="text">
+    <widget class="QGroupBox" name="groupBox_exportSelection">
+     <property name="title">
       <string>Select what to export</string>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="frame_3">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
+     <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QTreeWidget" name="treeWidget">
         <attribute name="headerVisible">
@@ -389,83 +357,33 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_10">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <widget class="QGroupBox" name="groupBox_assets">
+     <property name="title">
+      <string>Include optional assets (images, sounds, fonts)</string>
      </property>
-     <property name="text">
-      <string>Include assets (images, sounds, fonts)</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="FileDrop">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <property name="spacing">
-       <number>4</number>
-      </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <property name="spacing">
-         <number>0</number>
+       <widget class="QLabel" name="label_11">
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
         </property>
-        <property name="topMargin">
-         <number>0</number>
+        <property name="text">
+         <string>Drag and drop files and folders here</string>
         </property>
-        <item>
-         <widget class="QLabel" name="label_11">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>17</height>
-           </size>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="lineWidth">
-           <number>0</number>
-          </property>
-          <property name="text">
-           <string>Drag and drop files and folders here</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QListWidget" name="addedFiles">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="acceptDrops">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QListWidget" name="addedFiles">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="acceptDrops">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="addFiles">
@@ -537,17 +455,12 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>packageList</tabstop>
-  <tabstop>packageName</tabstop>
   <tabstop>openInfos</tabstop>
   <tabstop>Author</tabstop>
   <tabstop>addIcon</tabstop>
   <tabstop>Title</tabstop>
   <tabstop>Description</tabstop>
   <tabstop>Dependencies</tabstop>
-  <tabstop>treeWidget</tabstop>
-  <tabstop>addedFiles</tabstop>
-  <tabstop>addFiles</tabstop>
   <tabstop>lineEdit_filePath</tabstop>
  </tabstops>
  <resources/>
