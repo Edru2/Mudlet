@@ -96,6 +96,8 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     connect(mExportButton, &QAbstractButton::clicked, this, &dlgPackageExporter::slot_export_package);
     connect(ui->packageLocation, &QPushButton::clicked, this, &dlgPackageExporter::slot_openPackageLocation);
     connect(ui->openInfos, &QPushButton::clicked, this, &dlgPackageExporter::slot_openInfoDialog);
+    connect(ui->packageName, &QLineEdit::textChanged, this, &dlgPackageExporter::slot_packageNameChanged);
+    slot_packageNameChanged(QString());
     connect(ui->packageList, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &dlgPackageExporter::slot_packageChanged);
 
     ui->Dependencies->lineEdit()->setPlaceholderText(tr("Dependencies (optional)"));
@@ -106,7 +108,6 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     ui->Description->installEventFilter(this);
     ui->packageList->addItem(QStringLiteral("Update installed package"));
     ui->packageList->addItems(mpHost->mInstalledPackages);
-    ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)));
 
     auto modules = mpHost -> mInstalledModules;
     QMap<QString, QStringList>::const_iterator iter = modules.constBegin();
@@ -287,6 +288,16 @@ void dlgPackageExporter::slot_packageChanged(int index)
         }
         ui->addedFiles->addItem(f.absoluteFilePath());
     }
+}
+
+void dlgPackageExporter::slot_packageNameChanged(const QString &text)
+{
+    if (text.isEmpty()) {
+        ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)));
+        return;
+    }
+
+    ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1/%2.mpackage").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), text));
 }
 
 void dlgPackageExporter::slot_import_icon()
@@ -499,7 +510,7 @@ void dlgPackageExporter::slot_export_package()
     appendToConfigFile(mPackageConfig, QStringLiteral("description"), mPlainDescription);
     appendToConfigFile(mPackageConfig, QStringLiteral("version"), ui->Version->text());
     appendToConfigFile(mPackageConfig, QStringLiteral("dependencies"), mDependencies->stringList().join(","));
-    mPackageConfig.append(QStringLiteral("created = \"%1\"\n").arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-ddTHH:mm:sst"))));
+    mPackageConfig.append(QStringLiteral("created = \"%1\" t\n").arg(QDateTime::currentDateTime().toString(Qt::ISODate)));
 
     QString luaConfig = QStringLiteral("%1/config.lua").arg(StagingDirName);
     QFile configFile(luaConfig);
@@ -1265,7 +1276,7 @@ void dlgPackageExporter::slot_recountItems()
 
     if (!debounce) {
         debounce = true;
-        QTimer::singleShot(0, [this]() {
+        QTimer::singleShot(0, this, [this]() {
             int itemsToExport = countCheckedItems();
             if (itemsToExport == 0) {
                 mtextSelection->setText(tr("Select what to export"));
