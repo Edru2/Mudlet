@@ -106,6 +106,7 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     ui->Description->installEventFilter(this);
     ui->packageList->addItem(QStringLiteral("Update installed package"));
     ui->packageList->addItems(mpHost->mInstalledPackages);
+    ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)));
 
     auto modules = mpHost -> mInstalledModules;
     QMap<QString, QStringList>::const_iterator iter = modules.constBegin();
@@ -447,14 +448,9 @@ void dlgPackageExporter::slot_export_package()
         displayResultMessage(tr("Please enter the package name."), false);
         return;
     }
-    if (mPackagePath.isEmpty()) {
-        displayResultMessage(tr("Where would you like to save the package to?"), false);
-        return;
-    }
 
     // if packageName changed allow to create a new package in the same path
-    mPackagePathFileName = QStringLiteral("%1/%2.mpackage").arg(mPackagePath, mPackageName);
-    ui->filePath->setText(mPackagePathFileName);
+    mPackagePathFileName = QStringLiteral("%1/%2.mpackage").arg(getActualPath(), mPackageName);
 
     QString StagingDirName = mudlet::getMudletPath(mudlet::profileDataItemPath, profileName, QStringLiteral("tmp/%1").arg(mPackageName));
     QDir packageDir = QDir(StagingDirName);
@@ -875,7 +871,7 @@ void dlgPackageExporter::slot_export_package()
         // Success!
         displayResultMessage(tr("Package \"%1\" exported to: %2")
                              .arg(mPackageName, QStringLiteral("<a href=\"file:///%1\">%2</a>"))
-                             .arg(mPackagePath.toHtmlEscaped(), mPackagePath.toHtmlEscaped()), true);
+                             .arg(getActualPath().toHtmlEscaped(), getActualPath().toHtmlEscaped()), true);
     } else {
         // Failed - convert cancel to a close button
         ui->buttonBox->removeButton(mCancelButton);
@@ -939,8 +935,8 @@ void dlgPackageExporter::slot_openPackageLocation()
     }
     mPackagePath.replace(QLatin1String(R"(\)"), QLatin1String("/"));
     mPackagePathFileName = QStringLiteral("%1/%2.mpackage").arg(mPackagePath, mPackageName);
-    ui->filePath->setText(mPackagePathFileName);
-    ui->filePath->show();
+    ui->lineEdit_filePath->setText(mPackagePathFileName);
+    ui->lineEdit_filePath->show();
 }
 
 //only uncheck children
@@ -1281,4 +1277,9 @@ void dlgPackageExporter::slot_recountItems()
             debounce = false;
         });
     }
+}
+
+QString dlgPackageExporter::getActualPath() const
+{
+    return mPackagePath.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) : mPackagePath;
 }

@@ -99,6 +99,7 @@ private:
     void uncheckAllChildren();
     int countRecursive(QTreeWidgetItem* item, int count) const;
     int countCheckedItems() const;
+    QString getActualPath() const;
 
     Ui::dlgPackageExporter* ui;
     QPointer<Host> mpHost;
