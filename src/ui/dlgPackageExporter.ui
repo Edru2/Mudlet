@@ -97,19 +97,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_3">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Additional information</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QFrame" name="frame_2">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
@@ -204,7 +191,7 @@
             <enum>Qt::StrongFocus</enum>
            </property>
            <property name="placeholderText">
-            <string>Author (optional)</string>
+            <string>optional</string>
            </property>
           </widget>
          </item>
@@ -273,7 +260,7 @@
          <item row="2" column="1">
           <widget class="QLineEdit" name="Title">
            <property name="placeholderText">
-            <string>Title (optional)</string>
+            <string>optional</string>
            </property>
           </widget>
          </item>
@@ -299,7 +286,7 @@
             <bool>true</bool>
            </property>
            <property name="placeholderText">
-            <string>Description (optional)</string>
+            <string>optional</string>
            </property>
           </widget>
          </item>
@@ -322,7 +309,7 @@
          <item row="4" column="1">
           <widget class="QLineEdit" name="Version">
            <property name="placeholderText">
-            <string>Version (optional)</string>
+            <string>optional</string>
            </property>
           </widget>
          </item>
@@ -388,12 +375,6 @@
      <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
        <widget class="QTreeWidget" name="treeWidget">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
         <attribute name="headerVisible">
          <bool>false</bool>
         </attribute>
@@ -509,16 +490,19 @@
     <widget class="QWidget" name="widget" native="true">
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="1">
-       <widget class="QLineEdit" name="filePath">
+       <widget class="QLineEdit" name="lineEdit_filePath">
+        <property name="frame">
+         <bool>false</bool>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="1" column="2">
        <widget class="QPushButton" name="packageLocation">
         <property name="text">
-         <string>Select export location</string>
+         <string>Browse</string>
         </property>
        </widget>
       </item>
@@ -564,8 +548,7 @@
   <tabstop>treeWidget</tabstop>
   <tabstop>addedFiles</tabstop>
   <tabstop>addFiles</tabstop>
-  <tabstop>packageLocation</tabstop>
-  <tabstop>filePath</tabstop>
+  <tabstop>lineEdit_filePath</tabstop>
  </tabstops>
  <resources/>
  <connections>
