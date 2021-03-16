@@ -443,8 +443,12 @@ void dlgPackageExporter::slot_export_package()
     // required for KDE on Linux - so has been used for all platforms:
     QString profileName(mpHost->getName());
     mPackageName = ui->packageName->text();
-    if (mPackageName.isEmpty() || mPackagePath.isEmpty()) {
-        displayResultMessage(tr("Package name and package path are required!"), false);
+    if (mPackageName.isEmpty()) {
+        displayResultMessage(tr("Please enter the package name."), false);
+        return;
+    }
+    if (mPackagePath.isEmpty()) {
+        displayResultMessage(tr("Where would you like to save the package to?"), false);
         return;
     }
 
@@ -499,7 +503,7 @@ void dlgPackageExporter::slot_export_package()
     appendToConfigFile(mPackageConfig, QStringLiteral("description"), mPlainDescription);
     appendToConfigFile(mPackageConfig, QStringLiteral("version"), ui->Version->text());
     appendToConfigFile(mPackageConfig, QStringLiteral("dependencies"), mDependencies->stringList().join(","));
-    mPackageConfig.append(QStringLiteral("created = \"%1\"\n").arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd#HH-mm-ss"))));
+    mPackageConfig.append(QStringLiteral("created = \"%1\"\n").arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-ddTHH:mm:sst"))));
 
     QString luaConfig = QStringLiteral("%1/config.lua").arg(StagingDirName);
     QFile configFile(luaConfig);
@@ -957,7 +961,7 @@ void dlgPackageExporter::uncheckAllChildren()
     }
 }
 
-int countRecursive(QTreeWidgetItem* item, int count)
+int dlgPackageExporter::countRecursive(QTreeWidgetItem* item, int count) const
 {
     count = count + (item->checkState(0) == Qt::Checked ? 1 : 0);
     for (int i = 0; i < item->childCount(); i++) {
@@ -966,7 +970,7 @@ int countRecursive(QTreeWidgetItem* item, int count)
     return count;
 }
 
-int dlgPackageExporter::countCheckedItems()
+int dlgPackageExporter::countCheckedItems() const
 {
     int count = 0;
     for (int i = 0; i < treeWidget->topLevelItemCount(); i++) {
@@ -1261,12 +1265,20 @@ void dlgPackageExporter::displayResultMessage(const QString& html, bool const is
 
 void dlgPackageExporter::slot_recountItems()
 {
-    int itemsToExport = countCheckedItems();
-    if (itemsToExport == 0) {
-        mtextSelection->setText(tr("Select what to export"));
-    } else if (itemsToExport == 1) {
-        mtextSelection->setText(tr("Select what to export (1 item)"));
-    } else {
-        mtextSelection->setText(tr("Select what to export (%1 items)").arg(itemsToExport));
+    static bool debounce;
+
+    if (!debounce) {
+        debounce = true;
+        QTimer::singleShot(0, [this]() {
+            int itemsToExport = countCheckedItems();
+            if (itemsToExport == 0) {
+                mtextSelection->setText(tr("Select what to export"));
+            } else if (itemsToExport == 1) {
+                mtextSelection->setText(tr("Select what to export (1 item)"));
+            } else {
+                mtextSelection->setText(tr("Select what to export (%1 items)").arg(itemsToExport));
+            }
+            debounce = false;
+        });
     }
 }

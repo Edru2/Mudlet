@@ -97,7 +97,8 @@ private:
     static void appendToConfigFile(QString&, const QString&, const QString&);
     void displayResultMessage(const QString&, const bool isSuccessMessage = true);
     void uncheckAllChildren();
-    int countCheckedItems();
+    int countRecursive(QTreeWidgetItem* item, int count) const;
+    int countCheckedItems() const;
 
     Ui::dlgPackageExporter* ui;
     QPointer<Host> mpHost;
