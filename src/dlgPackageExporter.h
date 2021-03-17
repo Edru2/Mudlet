@@ -87,7 +87,8 @@ private slots:
     void slot_openPackageLocation();
     void slot_openInfoDialog();
     void slot_packageChanged(int);
-    void slot_packageNameChanged(const QString &text);
+    void slot_updateLocationPlaceholder(const QString &text);
+    void slot_enableExportButton(const QString &text);
     void slot_recountItems();
 
 protected:

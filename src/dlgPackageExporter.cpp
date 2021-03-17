@@ -96,8 +96,10 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     connect(mExportButton, &QAbstractButton::clicked, this, &dlgPackageExporter::slot_export_package);
     connect(ui->packageLocation, &QPushButton::clicked, this, &dlgPackageExporter::slot_openPackageLocation);
     connect(ui->openInfos, &QPushButton::clicked, this, &dlgPackageExporter::slot_openInfoDialog);
-    connect(ui->packageName, &QLineEdit::textChanged, this, &dlgPackageExporter::slot_packageNameChanged);
-    slot_packageNameChanged(QString());
+    connect(ui->packageName, &QLineEdit::textChanged, this, &dlgPackageExporter::slot_updateLocationPlaceholder);
+    slot_updateLocationPlaceholder(QString());
+    connect(ui->packageName, &QLineEdit::textChanged, this, &dlgPackageExporter::slot_enableExportButton);
+    slot_enableExportButton(QString());
     connect(ui->packageList, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &dlgPackageExporter::slot_packageChanged);
 
     ui->Dependencies->lineEdit()->setPlaceholderText(tr("Dependencies (optional)"));
@@ -290,7 +292,7 @@ void dlgPackageExporter::slot_packageChanged(int index)
     }
 }
 
-void dlgPackageExporter::slot_packageNameChanged(const QString &text)
+void dlgPackageExporter::slot_updateLocationPlaceholder(const QString &text)
 {
     if (text.isEmpty()) {
         ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)));
@@ -298,6 +300,16 @@ void dlgPackageExporter::slot_packageNameChanged(const QString &text)
     }
 
     ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1/%2.mpackage").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), text));
+}
+
+void dlgPackageExporter::slot_enableExportButton(const QString &text)
+{
+    if (text.isEmpty()) {
+        mExportButton->setEnabled(false);
+        return;
+    }
+
+    mExportButton->setEnabled(true);
 }
 
 void dlgPackageExporter::slot_import_icon()
@@ -503,6 +515,7 @@ void dlgPackageExporter::slot_export_package()
 
     mXmlPathFileName = QStringLiteral("%1/%2.xml").arg(StagingDirName, mPackageName);
 
+    mPackageConfig.clear();
     appendToConfigFile(mPackageConfig, QStringLiteral("mpackage"), mPackageName);
     appendToConfigFile(mPackageConfig, QStringLiteral("author"), ui->Author->text());
     appendToConfigFile(mPackageConfig, QStringLiteral("icon"), iconFile.fileName());
