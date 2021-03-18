@@ -94,10 +94,10 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     connect(ui->addFiles, &QAbstractButton::clicked, this, &dlgPackageExporter::slot_addFiles);
     ui->buttonBox->addButton(mExportButton, QDialogButtonBox::ResetRole);
     connect(mExportButton, &QAbstractButton::clicked, this, &dlgPackageExporter::slot_export_package);
-    connect(ui->packageLocation, &QPushButton::clicked, this, &dlgPackageExporter::slot_openPackageLocation);
-    connect(ui->openInfos, &QPushButton::clicked, this, &dlgPackageExporter::slot_openInfoDialog);
+    connect(ui->pushBotton_packageLocation, &QPushButton::clicked, this, &dlgPackageExporter::slot_openPackageLocation);
     connect(ui->packageName, &QLineEdit::textChanged, this, &dlgPackageExporter::slot_updateLocationPlaceholder);
-    slot_updateLocationPlaceholder(QString());
+    connect(this, &dlgPackageExporter::signal_exportLocationChanged, this, &dlgPackageExporter::slot_updateLocationPlaceholder);
+    slot_updateLocationPlaceholder();
     connect(ui->packageName, &QLineEdit::textChanged, this, &dlgPackageExporter::slot_enableExportButton);
     slot_enableExportButton(QString());
     connect(ui->packageList, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &dlgPackageExporter::slot_packageChanged);
@@ -108,7 +108,7 @@ dlgPackageExporter::dlgPackageExporter(QWidget *parent, Host* pHost)
     ui->Dependencies->installEventFilter(this);
     ui->Dependencies->view()->installEventFilter(this);
     ui->Description->installEventFilter(this);
-    ui->packageList->addItem(QStringLiteral("Update installed package"));
+    ui->packageList->addItem(QStringLiteral("update installed package"));
     ui->packageList->addItems(mpHost->mInstalledPackages);
 
     auto modules = mpHost -> mInstalledModules;
@@ -292,14 +292,15 @@ void dlgPackageExporter::slot_packageChanged(int index)
     }
 }
 
-void dlgPackageExporter::slot_updateLocationPlaceholder(const QString &text)
+void dlgPackageExporter::slot_updateLocationPlaceholder()
 {
-    if (text.isEmpty()) {
-        ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)));
+    const auto packageName = ui->packageName->text();
+    if (packageName.isEmpty()) {
+        ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1").arg(getActualPath()));
         return;
     }
 
-    ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1/%2.mpackage").arg(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), text));
+    ui->lineEdit_filePath->setPlaceholderText(tr("Export to %1/%2.mpackage").arg(getActualPath(), packageName));
 }
 
 void dlgPackageExporter::slot_enableExportButton(const QString &text)
@@ -523,7 +524,9 @@ void dlgPackageExporter::slot_export_package()
     appendToConfigFile(mPackageConfig, QStringLiteral("description"), mPlainDescription);
     appendToConfigFile(mPackageConfig, QStringLiteral("version"), ui->Version->text());
     appendToConfigFile(mPackageConfig, QStringLiteral("dependencies"), mDependencies->stringList().join(","));
-    mPackageConfig.append(QStringLiteral("created = \"%1\" t\n").arg(QDateTime::currentDateTime().toString(Qt::ISODate)));
+    QDateTime iso8601time(QDateTime::currentDateTime());
+    iso8601time.setTimeSpec(Qt::OffsetFromUTC);
+    mPackageConfig.append(QStringLiteral("created = \"%1%2\"\n").arg(iso8601time.toString(Qt::ISODate), iso8601time.timeZoneAbbreviation()));
 
     QString luaConfig = QStringLiteral("%1/config.lua").arg(StagingDirName);
     QFile configFile(luaConfig);
@@ -937,30 +940,14 @@ void dlgPackageExporter::slot_addFiles()
     fDialog->deleteLater();
 }
 
-void dlgPackageExporter::slot_openInfoDialog()
-{
-    ui->input->setVisible(!ui->input->isVisible());
-    setMaximumHeight(600);
-}
-
 void dlgPackageExporter::slot_openPackageLocation()
 {
     QString profileName(mpHost->getName());
-    mPackageName = ui->packageName->text();
-    if (mPackageName.isEmpty()) {
-        displayResultMessage(tr("Package name is required!"), false);
-        return;
-    }
-    mPackagePath =
-            QFileDialog::getExistingDirectory(nullptr, tr("Where do you want to save the package?"), mudlet::getMudletPath(mudlet::profileHomePath, profileName), QFileDialog::DontUseNativeDialog | QFileDialog::ShowDirsOnly);
 
-    if (mPackagePath.isEmpty()) {
-        return;
-    }
-    mPackagePath.replace(QLatin1String(R"(\)"), QLatin1String("/"));
-    mPackagePathFileName = QStringLiteral("%1/%2.mpackage").arg(mPackagePath, mPackageName);
-    ui->lineEdit_filePath->setText(mPackagePathFileName);
-    ui->lineEdit_filePath->show();
+    mPackagePath = QFileDialog::getExistingDirectory(
+            nullptr, tr("Where do you want to save the package?"), mudlet::getMudletPath(mudlet::profileHomePath, profileName), QFileDialog::DontUseNativeDialog | QFileDialog::ShowDirsOnly);
+
+    emit signal_exportLocationChanged(mPackagePath);
 }
 
 //only uncheck children

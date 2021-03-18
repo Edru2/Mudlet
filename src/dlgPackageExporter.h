@@ -85,9 +85,8 @@ private slots:
     void slot_removeDependency();
     void slot_import_icon();
     void slot_openPackageLocation();
-    void slot_openInfoDialog();
     void slot_packageChanged(int);
-    void slot_updateLocationPlaceholder(const QString &text);
+    void slot_updateLocationPlaceholder();
     void slot_enableExportButton(const QString &text);
     void slot_recountItems();
 
@@ -122,6 +121,9 @@ private:
     QString mPackageIconPath;
     QString mPackageConfig;
     QString mPlainDescription;
+
+signals:
+    void signal_exportLocationChanged(const QString& location);
 };
 
 #endif // MUDLET_DLGPACKAGEEXPORTER_H
